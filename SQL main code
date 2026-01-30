@@ -1,1 +1,774 @@
+-- Create the database
+CREATE DATABASE BankingSystem;
+USE BankingSystem;
+
+-- BANK ENTITY
+CREATE TABLE Bank (
+    Code VARCHAR(20) PRIMARY KEY,         -- Unique bank code
+    BankName VARCHAR(100) NOT NULL,       -- Name of the bank
+    Address VARCHAR(200)                  -- Bank address
+);
+
+-- BRANCH ENTITY
+CREATE TABLE Branch (
+    BranchID INT PRIMARY KEY AUTO_INCREMENT, -- Surrogate PK
+    BranchName VARCHAR(100) NOT NULL,        -- Branch commercial name
+    Address VARCHAR(200),                    -- Branch address
+    BranchCode VARCHAR(100) UNIQUE NOT NULL, -- Internal branch code
+    PhoneNumber VARCHAR(20),
+    BankCode VARCHAR(20),                    -- FK to Bank
+    FOREIGN KEY (BankCode) REFERENCES Bank(Code)
+);
+
+-- CUSTOMER ENTITY
+CREATE TABLE Customer (
+    CustomerID INT PRIMARY KEY AUTO_INCREMENT, -- Surrogate PK
+    CustomerType VARCHAR(20),                  -- Regular, Premium, etc.
+    LastName VARCHAR(100) NOT NULL,
+    FirstName VARCHAR(100) NOT NULL,
+    DateOfBirth DATE,
+    Email VARCHAR(100) UNIQUE,
+    PhoneNumber VARCHAR(20),
+    Address VARCHAR(200)
+);
+
+-- EMPLOYEE ENTITY
+CREATE TABLE Employee (
+    EmployeeID INT PRIMARY KEY AUTO_INCREMENT, -- Surrogate PK
+    Position VARCHAR(20),                      -- Teller, Manager, etc.
+    LastName VARCHAR(100) NOT NULL,
+    FirstName VARCHAR(100) NOT NULL,
+    DateOfBirth DATE,
+    Email VARCHAR(100) UNIQUE,
+    PhoneNumber VARCHAR(20),
+    Address VARCHAR(200),
+    BranchID INT,                              -- FK to Branch
+    FOREIGN KEY (BranchID) REFERENCES Branch(BranchID)
+);
+
+-- ACCOUNT ENTITY
+CREATE TABLE Account (
+    AccountID INT PRIMARY KEY AUTO_INCREMENT,  -- Surrogate PK
+    AccountType VARCHAR(20),                   -- Savings, Checking, etc.
+    AccountNumber VARCHAR(20) UNIQUE NOT NULL, -- Unique account number
+    CurrentBalance DECIMAL(15,2) DEFAULT 0.00,
+    DateOpened DATE NOT NULL,
+    DateClosed DATE,
+    AccountStatus VARCHAR(20) DEFAULT 'Active',
+    CustomerID INT,                            -- FK to Customer
+    BranchID INT,                              -- FK to Branch
+    FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID),
+    FOREIGN KEY (BranchID) REFERENCES Branch(BranchID)
+);
+
+-- TRANSACTION ENTITY
+CREATE TABLE Transaction (
+    TransactionID INT PRIMARY KEY AUTO_INCREMENT, -- Surrogate PK
+    TransactionType VARCHAR(20),                  -- Deposit, Withdrawal, etc.
+    Amount DECIMAL(15,2) NOT NULL,
+    TransactionDate DATETIME NOT NULL,
+    AccountID INT,                                -- FK to Account
+    FOREIGN KEY (AccountID) REFERENCES Account(AccountID)
+);
+
+-- LOAN ENTITY
+CREATE TABLE Loan (
+    LoanID INT PRIMARY KEY AUTO_INCREMENT,   -- Surrogate PK
+    LoanType VARCHAR(20),                    -- Personal, Mortgage, etc.
+    LoanAmount DECIMAL(15,2) NOT NULL,
+    InterestRate DECIMAL(5,2) NOT NULL,      -- Annual %
+    Term INT NOT NULL,                       -- Duration in months
+    StartDate DATE NOT NULL,
+    EndDate DATE,
+    Status VARCHAR(20) DEFAULT 'Active',
+    CustomerID INT,                          -- FK to Customer
+    BranchID INT,                            -- FK to Branch
+    FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID),
+    FOREIGN KEY (BranchID) REFERENCES Branch(BranchID)
+);
+
+-- LOAN PAYMENT ENTITY
+CREATE TABLE LoanPayment (
+    LoanPaymentID INT PRIMARY KEY AUTO_INCREMENT, -- Surrogate PK
+    ScheduledPaymentDate DATE NOT NULL,
+    PaymentAmount DECIMAL(15,2) NOT NULL,
+    PrincipalAmount DECIMAL(15,2),
+    InterestAmount DECIMAL(15,2),
+    PaidAmount DECIMAL(15,2),
+    PaidDate DATE,
+    LoanID INT,                                   -- FK to Loan
+    FOREIGN KEY (LoanID) REFERENCES Loan(LoanID)
+);
+
+-- View all banks
+SELECT * FROM Bank;
+
+-- View all branches
+SELECT * FROM Branch;
+
+-- View all customers
+SELECT * FROM Customer;
+
+-- View all employees
+SELECT * FROM Employee;
+
+-- View all accounts
+SELECT * FROM Account;
+
+-- View all transactions
+SELECT * FROM Transaction;
+
+-- View all loans
+SELECT * FROM Loan;
+
+-- View all loan payments
+SELECT * FROM LoanPayment;
+
+-- BANK
+INSERT INTO Bank (Code, BankName, Address) VALUES
+('B001', 'MetroBank', '123 Ayala Ave, Makati'),
+('B002', 'UnionBank', '456 Ortigas Center, Pasig'),
+('B003', 'BDO', '789 Greenhills, San Juan'),
+('B004', 'LandBank', '101 Quezon Ave, QC'),
+('B005', 'Security Bank', '202 Bonifacio Global City, Taguig'),
+('B006', 'EastWest Bank', '101 Ayala Ave, Makati'),
+('B007', 'BPI', '222 Makati Ave, Makati'),
+('B008', 'RCBC', '333 Ortigas Ave, Pasig'),
+('B009', 'PNB', '444 Greenhills, San Juan'),
+('B010', 'China Bank', '555 Quezon Ave, QC'),
+('B011', 'Philippine National Bank', '666 BGC, Taguig'),
+('B012', 'UCPB', '777 Pasig City, Ortigas'),
+('B013', 'Union Bank', '888 Greenhills, San Juan'),
+('B014', 'Maybank', '999 Makati City'),
+('B015', 'Metrobank', '1234 BGC, Taguig'),
+('B016', 'DBP', '444 Makati Ave'),
+('B017', 'Union Bank of the Philippines', '888 BGC'),
+('B018', 'LandBank of the Philippines', '555 Ortigas Center'),
+('B019', 'Security Bank Corporation', '321 Makati Ave'),
+('B020', 'Philippine Bank of Communications', '777 QC'),
+('B021', 'EastWest', '102 Ayala Ave'),
+('B022', 'BPI Family Savings', '455 Ortigas Center'),
+('B023', 'RCBC Savings', '101 Quezon Ave'),
+('B024', 'Security Bank', '777 Makati City'),
+('B025', 'BDO Unibank', '999 Greenhills'),
+('B026', 'Chinabank', '202 BGC, Taguig'),
+('B027', 'BPI Direct', '110 Ortigas Center'),
+('B028', 'Metrobank Direct', '123 Makati Ave'),
+('B029', 'Unionbank Direct', '333 Pasig City'),
+('B030', 'DBP Savings', '111 Ortigas Ave'),
+('B031', 'EastWest Direct', '104 BGC, Taguig'),
+('B032', 'PNB Direct', '888 Makati City'),
+('B033', 'RCBC Direct', '775 QC City'),
+('B034', 'Philippine National Bank Direct', '900 BGC'),
+('B035', 'UCPB Direct', '333 Greenhills'),
+('B036', 'Philippine Trust Company', '100 Pasig City'),
+('B037', 'Landbank Direct', '404 Makati Ave'),
+('B038', 'PNB Family Savings', '203 Greenhills'),
+('B039', 'Citi Bank', '500 Makati City'),
+('B040', 'HSBC', '100 Ortigas Center'),
+('B041', 'Union Bank of India', '202 BGC'),
+('B042', 'China Bank Savings', '505 San Juan'),
+('B043', 'UCPB Savings', '506 Ortigas Center'),
+('B044', 'RCBC Direct Savings', '307 Quezon Ave'),
+('B045', 'DBP Family', '507 BGC, Taguig'),
+('B046', 'BPI Family', '701 Makati City'),
+('B047', 'EastWest Family', '201 San Juan City'),
+('B048', 'Security Bank Family', '800 Makati Ave'),
+('B049', 'Metro Bank Family', '1500 Pasig'),
+('B050', 'BPI Direct Savings', '1200 Makati');
+
+-- BRANCH
+INSERT INTO Branch (BranchID, BranchName, Address, BranchCode, PhoneNumber, BankCode) VALUES
+(1, 'MetroBank Makati', '123 Ayala Ave, Makati', 'MB-MKT', '09171234567', 'B001'),
+(2, 'UnionBank Ortigas', '456 Ortigas Center, Pasig', 'UB-ORT', '09181234567', 'B002'),
+(3, 'BDO Quezon City', '789 EDSA, Quezon City', 'BDO-QC', '09191234567', 'B003'),
+(4, 'MetroBank Cebu', '101 Osmeña Blvd, Cebu City', 'MB-CEB', '09201234567', 'B001'),
+(5, 'UnionBank Davao', '202 JP Laurel Ave, Davao City', 'UB-DAV', '09211234567', 'B002'),
+(6, 'BDO Taguig', '303 Bonifacio High St, Taguig', 'BDO-TAG', '09221234567', 'B003'),
+(7, 'MetroBank Pasig', '404 Shaw Blvd, Pasig', 'MB-PAS', '09231234567', 'B001'),
+(8, 'UnionBank Makati', '505 Salcedo St, Makati', 'UB-MKT2', '09241234567', 'B002'),
+(9, 'BDO Manila', '606 Taft Ave, Manila', 'BDO-MNL', '09251234567', 'B003'),
+(10, 'MetroBank Baguio', '707 Session Rd, Baguio', 'MB-BAG', '09261234567', 'B001'),
+(11, 'UnionBank QC', '808 Commonwealth Ave, QC', 'UB-QC', '09271234567', 'B002'),
+(12, 'BDO Cainta', '909 Ortigas Ext, Cainta', 'BDO-CAI', '09281234567', 'B003'),
+(13, 'MetroBank Alabang', '111 Commerce Ave, Alabang', 'MB-ALA', '09291234567', 'B001'),
+(14, 'UnionBank Las Piñas', '222 Alabang-Zapote Rd, LP', 'UB-LPN', '09301234567', 'B002'),
+(15, 'BDO San Juan', '333 N Domingo St, San Juan', 'BDO-SJN', '09311234567', 'B003'),
+(16, 'MetroBank Marikina', '444 Shoe Ave, Marikina', 'MB-MAR', '09321234567', 'B001'),
+(17, 'UnionBank Antipolo', '555 Circumferential Rd, Antipolo', 'UB-ANT', '09331234567', 'B002'),
+(18, 'BDO Valenzuela', '666 MacArthur Hwy, Valenzuela', 'BDO-VAL', '09341234567', 'B003'),
+(19, 'MetroBank Cavite', '777 Aguinaldo Hwy, Cavite', 'MB-CAV', '09351234567', 'B001'),
+(20, 'UnionBank Laguna', '888 National Rd, Laguna', 'UB-LAG', '09361234567', 'B002'),
+(21, 'BDO Batangas', '999 P Burgos St, Batangas', 'BDO-BAT', '09371234567', 'B003'),
+(22, 'MetroBank Iloilo', '121 Gen Luna St, Iloilo', 'MB-ILO', '09381234567', 'B001'),
+(23, 'UnionBank Bacolod', '131 Lacson St, Bacolod', 'UB-BAC', '09391234567', 'B002'),
+(24, 'BDO CDO', '141 Corrales Ave, CDO', 'BDO-CDO', '09401234567', 'B003'),
+(25, 'MetroBank Zamboanga', '151 Mayor Jaldon St, Zamboanga', 'MB-ZAM', '09411234567', 'B001'),
+(26, 'UnionBank GenSan', '161 Santiago Blvd, GenSan', 'UB-GSN', '09421234567', 'B002'),
+(27, 'BDO Iligan', '171 Roxas Ave, Iligan', 'BDO-ILG', '09431234567', 'B003'),
+(28, 'MetroBank Tarlac', '181 MacArthur Hwy, Tarlac', 'MB-TAR', '09441234567', 'B001'),
+(29, 'UnionBank Pampanga', '191 San Fernando Blvd, Pampanga', 'UB-PAM', '09451234567', 'B002'),
+(30, 'BDO Bulacan', '201 Malolos Rd, Bulacan', 'BDO-BUL', '09461234567', 'B003'),
+(31, 'MetroBank Rizal', '211 Provincial Rd, Rizal', 'MB-RIZ', '09471234567', 'B001'),
+(32, 'UnionBank Nueva Ecija', '221 Maharlika Hwy, NE', 'UB-NEC', '09481234567', 'B002'),
+(33, 'BDO Isabela', '231 Cabagan Rd, Isabela', 'BDO-ISA', '09491234567', 'B003'),
+(34, 'MetroBank La Union', '241 San Fernando Rd, LU', 'MB-LUN', '09501234567', 'B001'),
+(35, 'UnionBank Ilocos Norte', '251 Laoag City Rd, IN', 'UB-ILN', '09511234567', 'B002'),
+(36, 'BDO Abra', '261 Bangued Rd, Abra', 'BDO-ABR', '09521234567', 'B003'),
+(37, 'MetroBank Palawan', '271 Rizal Ave, Puerto Princesa', 'MB-PAL', '09531234567', 'B001'),
+(38, 'UnionBank Mindoro', '281 Calapan Rd, Mindoro', 'UB-MIN', '09541234567', 'B002'),
+(39, 'BDO Romblon', '291 Odiongan Rd, Romblon', 'BDO-ROM', '09551234567', 'B003'),
+(40, 'MetroBank Catanduanes', '301 Virac Rd, Catanduanes', 'MB-CAT', '09561234567', 'B001'),
+(41, 'UnionBank Sorsogon', '311 Sorsogon City Rd', 'UB-SOR', '09571234567', 'B002'),
+(42, 'BDO Masbate', '321 Masbate City Rd', 'BDO-MAS', '09581234567', 'B003'),
+(43, 'MetroBank CamSur', '331 Naga City Rd, CamSur', 'MB-CMS', '09591234567', 'B001'),
+(44, 'UnionBank CamNorte', '341 Daet Rd, CamNorte', 'UB-CMN', '09601234567', 'B002'),
+(45, 'BDO Albay', '351 Legazpi City Rd, Albay', 'BDO-ALB', '09611234567', 'B003'),
+(46, 'MetroBank Leyte', '361 Tacloban City Rd, Leyte', 'MB-LEY', '09621234567', 'B001'),
+(47, 'UnionBank Samar', '371 Catbalogan Rd, Samar', 'UB-SAM', '09631234567', 'B002'),
+(48, 'BDO Bohol', '381 Tagbilaran City Rd, Bohol', 'BDO-BOH', '09641234567', 'B003'),
+(49, 'MetroBank Negros Oriental', '391 Dumaguete Rd, Negros Oriental', 'MB-NOR', '09651234567', 'B001'),
+(50, 'UnionBank Surigao', '401 Surigao City Rd, Surigao', 'UB-SUR', '09661234567', 'B002');
+
+-- CUSTOMER
+INSERT INTO Customer (CustomerID, CustomerType, LastName, FirstName, DateOfBirth, Email, PhoneNumber, Address) VALUES
+(1,'Regular', 'Santos', 'Juan', '1985-03-15', 'juan.santos@example.com', '09171234567', 'Makati City'),
+(2, 'Premium', 'Reyes', 'Maria', '1990-07-20', 'maria.reyes@example.com', '09181234567', 'Pasig City'),
+(3, 'Regular', 'Cruz', 'Jose', '1978-11-05', 'jose.cruz@example.com', '09191234567', 'Quezon City'),
+(4, 'Premium', 'Garcia', 'Ana', '1982-02-10', 'ana.garcia@example.com', '09201234567', 'Taguig City'),
+(5, 'Regular', 'Lopez', 'Carlos', '1995-09-25', 'carlos.lopez@example.com', '09211234567', 'San Juan City'),
+(6, 'Premium', 'Torres', 'Luis', '1986-04-13', 'luis.torres@example.com', '09221234567', 'Cebu City'),
+(7, 'Regular', 'Dela Cruz', 'Pedro', '1974-01-20', 'pedro.delacruz@example.com', '09231234567', 'Davao City'),
+(8, 'Premium', 'Mendoza', 'Maria', '1980-09-07', 'maria.mendoza@example.com', '09241234567', 'Cagayan de Oro'),
+(9, 'Regular', 'Bautista', 'Elena', '1992-11-03', 'elena.bautista@example.com', '09251234567', 'Taguig City'),
+(10, 'Premium', 'Ramirez', 'Carlos', '1984-06-14', 'carlos.ramirez@example.com', '09261234567', 'Quezon City'),
+(11, 'Regular', 'Gonzales', 'Rosa', '1990-08-01', 'rosa.gonzales@example.com', '09271234567', 'Makati'),
+(12, 'Premium', 'Javier', 'Ivan', '1989-02-18', 'ivan.javier@example.com', '09281234567', 'Pasig'),
+(13, 'Regular', 'Belen', 'Carlos', '1977-09-22', 'carlos.belen@example.com', '09291234567', 'Makati'),
+(14, 'Premium', 'Esteban', 'Leila', '1994-11-05', 'leila.esteban@example.com', '09301234567', 'Quezon City'),
+(15, 'Regular', 'Perez', 'Benito', '1983-05-20', 'benito.perez@example.com', '09311234567', 'San Juan'),
+(16, 'Premium', 'Santos', 'Fernando', '1991-01-15', 'fernando.santos@example.com', '09321234567', 'BGC, Taguig'),
+(17, 'Regular', 'Dizon', 'Maricel', '1995-03-03', 'maricel.dizon@example.com', '09331234567', 'Pasig City'),
+(18, 'Premium', 'Pineda', 'Valerie', '1985-10-21', 'valerie.pineda@example.com', '09341234567', 'Cebu City'),
+(19, 'Regular', 'Gomez', 'Miguel', '1988-04-14', 'miguel.gomez@example.com', '09351234567', 'Davao City'),
+(20, 'Premium', 'Campos', 'Estela', '1982-06-07', 'estela.campos@example.com', '09361234567', 'San Juan City'),
+(21, 'Regular', 'Jimenez', 'Ricardo', '1996-12-15', 'ricardo.jimenez@example.com', '09371234567', 'Makati'),
+(22, 'Premium', 'Navarro', 'Gilda', '1991-07-11', 'gilda.navarro@example.com', '09381234567', 'Taguig'),
+(23, 'Regular', 'Mendoza', 'John', '1986-03-10', 'john.mendoza@example.com', '09391234567', 'Quezon City'),
+(24, 'Premium', 'Marquez', 'Benjamin', '1992-10-05', 'benjamin.marquez@example.com', '09401234567', 'Manila'),
+(25, 'Regular', 'Castro', 'Arlene', '1987-08-30', 'arlene.castro@example.com', '09411234567', 'Muntinlupa'),
+(26, 'Premium', 'Lozano', 'Raul', '1994-11-22', 'raul.lozano@example.com', '09421234567', 'Las Piñas'),
+(27, 'Regular', 'Quinto', 'Paolo', '1990-03-25', 'paolo.quinto@example.com', '09431234567', 'Makati City'),
+(28, 'Premium', 'Carreon', 'Sandra', '1982-12-14', 'sandra.carreon@example.com', '09441234567', 'Cebu'),
+(29, 'Regular', 'Morales', 'Gregorio', '1988-05-02', 'gregorio.morales@example.com', '09451234567', 'Pasig'),
+(30, 'Premium', 'Santos', 'Vicente', '1993-04-10', 'vicente.santos@example.com', '09461234567', 'Manila'),
+(31, 'Regular', 'Estrada', 'Edgar', '1984-06-01', 'edgar.estrada@example.com', '09471234567', 'Muntinlupa'),
+(32, 'Premium', 'Alvarez', 'Linda', '1989-11-07', 'linda.alvarez@example.com', '09481234567', 'Quezon City'),
+(33, 'Regular', 'Bautista', 'Antonio', '1997-05-16', 'antonio.bautista@example.com', '09491234567', 'Taguig'),
+(34, 'Premium', 'Mercado', 'Antonio', '1995-02-28', 'antonio.mercado@example.com', '09501234567', 'Cebu City'),
+(35, 'Regular', 'Vergara', 'Jovita', '1988-01-19', 'jovita.vergara@example.com', '09511234567', 'San Juan City'),
+(36, 'Premium', 'Alvarado', 'Jose', '1985-04-10', 'jose.alvarado@example.com', '09521234567', 'Manila'),
+(37, 'Regular', 'Villar', 'Rosalinda', '1992-08-20', 'rosalinda.villar@example.com', '09531234567', 'Pasig City'),
+(38, 'Premium', 'Sanchez', 'Santiago', '1993-12-18', 'santiago.sanchez@example.com', '09541234567', 'Makati'),
+(39, 'Regular', 'Salazar', 'Jocelyn', '1990-02-05', 'jocelyn.salazar@example.com', '09551234567', 'Quezon City'),
+(40, 'Premium', 'Vicente', 'Marlon', '1983-05-21', 'marlon.vicente@example.com', '09561234567', 'Manila'),
+(41, 'Regular', 'Manalo', 'Celestino', '1986-10-15', 'celestino.manalo@example.com', '09571234567', 'Pasig City'),
+(42, 'Premium', 'Luciano', 'Linda', '1990-11-11', 'linda.luciano@example.com', '09581234567', 'Makati City'),
+(43, 'Regular', 'Alcantara', 'Rita', '1987-09-03', 'rita.alcantara@example.com', '09591234567', 'Taguig'),
+(44, 'Premium', 'Llorente', 'Alberto', '1982-01-07', 'alberto.llorente@example.com', '09601234567', 'Pasig City'),
+(45, 'Regular', 'Ramos', 'Marco', '1991-04-18', 'marco.ramos@example.com', '09611234567', 'San Juan'),
+(46, 'Premium', 'Luna', 'Isabel', '1990-12-11', 'isabel.luna@example.com', '09621234567', 'Quezon City'),
+(47, 'Regular', 'Delos Reyes', 'Josefina', '1986-06-22', 'josefina.delosreyes@example.com', '09631234567', 'BGC'),
+(48, 'Premium', 'Marquez', 'Cecilia', '1988-10-14', 'cecilia.marquez@example.com', '09641234567', 'Taguig'),
+(49, 'Regular', 'De Guzman', 'Alex', '1993-02-25', 'alex.deguzman@example.com', '09651234567', 'Muntinlupa'),
+(50, 'Premium', 'Bautista', 'Corazon', '1989-03-12', 'corazon.bautista@example.com', '09661234567', 'Makati');
+
+-- EMPLOYEE
+INSERT INTO Employee (EmployeeID, Position, LastName, FirstName, DateOfBirth, Email, PhoneNumber, Address, BranchID) VALUES
+(1, 'Manager', 'Dela Cruz', 'Pedro', '1975-01-12', 'pedro.delacruz@bank.com', '09171234567', 'Makati City', 1),
+(2, 'Teller', 'Ramos', 'Liza', '1988-04-22', 'liza.ramos@bank.com', '09181234567', 'Pasig City', 2),
+(3, 'Loan Officer', 'Torres', 'Mark', '1982-06-30', 'mark.torres@bank.com', '09191234567', 'San Juan City', 3),
+(4, 'Clerk', 'Fernandez', 'Julia', '1990-10-05', 'julia.fernandez@bank.com', '09201234567', 'Quezon City', 4),
+(5, 'Manager', 'Gonzales', 'Leo', '1985-12-18', 'leo.gonzales@bank.com', '09211234567', 'Taguig City', 5),
+(6, 'Teller', 'Mendoza', 'Maria', '1986-02-28', 'maria.mendoza@bank.com', '09221234567', 'Makati City', 6),
+(7, 'Loan Officer', 'Rivera', 'Carlos', '1981-07-14', 'carlos.rivera@bank.com', '09231234567', 'Pasig City', 7),
+(8, 'Clerk', 'Lopez', 'Isabella', '1994-05-20', 'isabella.lopez@bank.com', '09241234567', 'San Juan City', 8),
+(9, 'Manager', 'Santos', 'Luis', '1984-09-11', 'luis.santos@bank.com', '09251234567', 'Taguig City', 9),
+(10, 'Teller', 'Martinez', 'Ricardo', '1990-03-03', 'ricardo.martinez@bank.com', '09261234567', 'Quezon City', 10),
+(11, 'Loan Officer', 'Villar', 'Marlon', '1982-10-19', 'marlon.villar@bank.com', '09271234567', 'Makati City', 11),
+(12, 'Clerk', 'Salazar', 'Eva', '1988-01-14', 'eva.salazar@bank.com', '09281234567', 'Pasig City', 12),
+(13, 'Manager', 'Fernandez', 'Rodolfo', '1979-12-10', 'rodolfo.fernandez@bank.com', '09291234567', 'San Juan City', 13),
+(14, 'Teller', 'Quinto', 'Elena', '1985-11-30', 'elena.quinto@bank.com', '09301234567', 'Taguig City', 14),
+(15, 'Loan Officer', 'Rojas', 'Antonio', '1986-08-22', 'antonio.rojas@bank.com', '09311234567', 'Quezon City', 15),
+(16, 'Clerk', 'Morales', 'Grace', '1991-04-05', 'grace.morales@bank.com', '09321234567', 'Makati City', 16),
+(17, 'Manager', 'Mendoza', 'Antonio', '1987-01-18', 'antonio.mendoza@bank.com', '09331234567', 'Pasig City', 17),
+(18, 'Teller', 'Pineda', 'Zenaida', '1992-11-13', 'zenaida.pineda@bank.com', '09341234567', 'San Juan City', 18),
+(19, 'Loan Officer', 'Lopez', 'Carlos', '1983-06-22', 'carlos.lopez@bank.com', '09351234567', 'Taguig City', 19),
+(20, 'Clerk', 'Salvador', 'Liza', '1991-02-10', 'liza.salvador@bank.com', '09361234567', 'Makati City', 20),
+(21, 'Manager', 'Gonzalez', 'Andres', '1980-10-15', 'andres.gonzalez@bank.com', '09371234567', 'Pasig City', 21),
+(22, 'Teller', 'Ferrer', 'Grace', '1989-07-22', 'grace.ferrer@bank.com', '09381234567', 'San Juan City', 22),
+(23, 'Loan Officer', 'Quintana', 'Victor', '1984-05-06', 'victor.quintana@bank.com', '09391234567', 'Taguig City', 23),
+(24, 'Clerk', 'Bautista', 'Olivia', '1987-09-25', 'olivia.bautista@bank.com', '09401234567', 'Quezon City', 24),
+(25, 'Manager', 'Lazaro', 'Frances', '1981-02-17', 'frances.lazaro@bank.com', '09411234567', 'Makati City', 25),
+(26, 'Teller', 'Moreno', 'Carlos', '1988-12-03', 'carlos.moreno@bank.com', '09421234567', 'Pasig City', 26),
+(27, 'Loan Officer', 'Cruz', 'Jill', '1990-05-30', 'jill.cruz@bank.com', '09431234567', 'San Juan City', 27),
+(28, 'Clerk', 'Gonzales', 'Margarita', '1994-03-14', 'margarita.gonzales@bank.com', '09441234567', 'Taguig City', 28),
+(29, 'Manager', 'Bautista', 'Laura', '1982-07-20', 'laura.bautista@bank.com', '09451234567', 'Quezon City', 29),
+(30, 'Teller', 'Javier', 'Eduardo', '1989-09-17', 'eduardo.javier@bank.com', '09461234567', 'Makati City', 30),
+(31, 'Loan Officer', 'Valdez', 'Vivian', '1991-06-11', 'vivian.valdez@bank.com', '09471234567', 'Pasig City', 31),
+(32, 'Clerk', 'Bautista', 'Hector', '1984-10-28', 'hector.bautista@bank.com', '09481234567', 'San Juan City', 32),
+(33, 'Manager', 'Rodriguez', 'Celso', '1983-02-12', 'celso.rodriguez@bank.com', '09491234567', 'Taguig City', 33),
+(34, 'Teller', 'Lopez', 'Diana', '1993-05-16', 'diana.lopez@bank.com', '09501234567', 'Quezon City', 34),
+(35, 'Loan Officer', 'Santos', 'Raul', '1992-04-25', 'raul.santos@bank.com', '09511234567', 'Makati City', 35),
+(36, 'Clerk', 'Garcia', 'Ronnie', '1990-07-19', 'ronnie.garcia@bank.com', '09521234567', 'Pasig City', 36),
+(37, 'Manager', 'Martinez', 'Luis', '1982-08-13', 'luis.martinez@bank.com', '09531234567', 'San Juan City', 37),
+(38, 'Teller', 'Lopez', 'Doris', '1994-03-11', 'doris.lopez@bank.com', '09541234567', 'Taguig City', 38),
+(39, 'Loan Officer', 'Salazar', 'Alex', '1990-12-17', 'alex.salazar@bank.com', '09551234567', 'Quezon City', 39),
+(40, 'Clerk', 'Velasco', 'Monica', '1986-09-22', 'monica.velasco@bank.com', '09561234567', 'Makati City', 40),
+(41, 'Manager', 'Gonzalez', 'Fidel', '1985-01-05', 'fidel.gonzalez@bank.com', '09571234567', 'Pasig City', 41),
+(42, 'Teller', 'Salvador', 'Nina', '1987-12-07', 'nina.salvador@bank.com', '09581234567', 'San Juan City', 42),
+(43, 'Loan Officer', 'Villar', 'Jorge', '1991-05-22', 'jorge.villar@bank.com', '09591234567', 'Taguig City', 43),
+(44, 'Clerk', 'Ramos', 'Nina', '1988-02-09', 'nina.ramos@bank.com', '09601234567', 'Quezon City', 44),
+(45, 'Manager', 'Gomez', 'Mario', '1981-04-18', 'mario.gomez@bank.com', '09611234567', 'Makati City', 45),
+(46, 'Teller', 'Mercado', 'Olga', '1992-06-03', 'olga.mercado@bank.com', '09621234567', 'Pasig City', 46),
+(47, 'Loan Officer', 'Torre', 'Jose', '1990-07-30', 'jose.torre@bank.com', '09631234567', 'San Juan City', 47),
+(48, 'Clerk', 'Garcia', 'Armando', '1983-03-04', 'armando.garcia@bank.com', '09641234567', 'Taguig City', 48),
+(49, 'Manager', 'Santos', 'Julio', '1984-11-20', 'julio.santos@bank.com', '09651234567', 'Quezon City', 49),
+(50, 'Teller', 'Serrano', 'Mariano', '1989-10-22', 'mariano.serrano@bank.com', '09661234567', 'Makati City', 50);
+-- 2.1 INSERT NEW CUSTOMER 
+INSERT INTO Customer (CustomerID, CustomerType, LastName, FirstName, DateOfBirth, Email, PhoneNumber, Address) VALUES 
+(51, 'Regular', 'Martinez', 'Carlos', '1985-06-25', 'carlos.martinez@example.com', '09181234567', 'Makati, Metro Manila'),
+(52, 'Premium', 'Lopez', 'Ana', '1992-03-14', 'ana.lopez@example.com', '09182345678', 'Taguig, Metro Manila'),
+(53, 'Regular', 'Gomez', 'Carlos', '1990-05-17', 'carlos.gomez@example.com', '09191234570', 'Quezon City, Metro Manila');
+
+-- ACCOUNT
+INSERT INTO Account (AccountID, AccountType, AccountNumber, CurrentBalance, DateOpened, DateClosed, AccountStatus, CustomerID, BranchID) VALUES
+(1, 'Savings', 'ACC1001', 25000.00, '2020-01-15', NULL, 'Active', 1, 1),
+(2, 'Checking', 'ACC1002', 15000.00, '2021-03-10', NULL, 'Active', 2, 2),
+(3, 'Savings', 'ACC1003', 5000.00, '2019-07-25', NULL, 'Active', 3, 3),
+(4, 'Checking', 'ACC1004', 30000.00, '2022-05-12', NULL, 'Active', 4, 4),
+(5, 'Savings', 'ACC1005', 12000.00, '2020-09-01', NULL, 'Active', 5, 5),
+(6, 'Savings', 'ACC1006', 22000.00, '2021-07-19', NULL, 'Active', 6, 6),
+(7, 'Checking', 'ACC1007', 18000.00, '2020-02-13', NULL, 'Active', 7, 7),
+(8, 'Savings', 'ACC1008', 9000.00, '2021-05-25', NULL, 'Active', 8, 8),
+(9, 'Checking', 'ACC1009', 28000.00, '2022-06-19', NULL, 'Active', 9, 9),
+(10, 'Savings', 'ACC1010', 17000.00, '2019-04-22', NULL, 'Active', 10, 10),
+(11, 'Savings', 'ACC1011', 5000.00, '2021-03-12', NULL, 'Active', 11, 11),
+(12, 'Checking', 'ACC1012', 25000.00, '2020-06-28', NULL, 'Active', 12, 12),
+(13, 'Savings', 'ACC1013', 22000.00, '2020-07-15', NULL, 'Active', 13, 13),
+(14, 'Checking', 'ACC1014', 29000.00, '2021-02-18', NULL, 'Active', 14, 14),
+(15, 'Savings', 'ACC1015', 15000.00, '2022-05-20', NULL, 'Active', 15, 15),
+(16, 'Checking', 'ACC1016', 21000.00, '2019-09-10', NULL, 'Active', 16, 16),
+(17, 'Savings', 'ACC1017', 30000.00, '2022-03-08', NULL, 'Active', 17, 17),
+(18, 'Checking', 'ACC1018', 11000.00, '2021-01-11', NULL, 'Active', 18, 18),
+(19, 'Savings', 'ACC1019', 14000.00, '2021-06-24', NULL, 'Active', 19, 19),
+(20, 'Checking', 'ACC1020', 26000.00, '2022-09-15', NULL, 'Active', 20, 20),
+(21, 'Savings', 'ACC1021', 3000.00, '2023-04-01', NULL, 'Active', 21, 21),
+(22, 'Checking', 'ACC1022', 2100.00, '2022-12-01', NULL, 'Active', 22, 22),
+(23, 'Savings', 'ACC1023', 3500.00, '2022-08-30', NULL, 'Active', 23, 23),
+(24, 'Checking', 'ACC1024', 5000.00, '2023-01-10', NULL, 'Active', 24, 24),
+(25, 'Savings', 'ACC1025', 8000.00, '2021-12-01', NULL, 'Active', 25, 25),
+(26, 'Checking', 'ACC1026', 27000.00, '2021-11-10', NULL, 'Active', 26, 26),
+(27, 'Savings', 'ACC1027', 15000.00, '2022-04-25', NULL, 'Active', 27, 27),
+(28, 'Checking', 'ACC1028', 35000.00, '2023-02-14', NULL, 'Active', 28, 28),
+(29, 'Savings', 'ACC1029', 22000.00, '2021-09-12', NULL, 'Active', 29, 29),
+(30, 'Checking', 'ACC1030', 24000.00, '2022-06-02', NULL, 'Active', 30, 30),
+(31, 'Savings', 'ACC1031', 19000.00, '2020-11-10', NULL, 'Active', 31, 31),
+(32, 'Checking', 'ACC1032', 50000.00, '2021-07-17', NULL, 'Active', 32, 32),
+(33, 'Savings', 'ACC1033', 8000.00, '2022-02-03', NULL, 'Active', 33, 33),
+(34, 'Checking', 'ACC1034', 12000.00, '2020-06-28', NULL, 'Active', 34, 34),
+(35, 'Savings', 'ACC1035', 9500.00, '2023-05-19', NULL, 'Active', 35, 35),
+(36, 'Checking', 'ACC1036', 15500.00, '2021-12-23', NULL, 'Active', 36, 36),
+(37, 'Savings', 'ACC1037', 15000.00, '2021-08-11', NULL, 'Active', 37, 37),
+(38, 'Checking', 'ACC1038', 32000.00, '2022-11-21', NULL, 'Active', 38, 38),
+(39, 'Savings', 'ACC1039', 5000.00, '2023-01-18', NULL, 'Active', 39, 39),
+(40, 'Checking', 'ACC1040', 45000.00, '2022-04-17', NULL, 'Active', 40, 40),
+(41, 'Savings', 'ACC1041', 32000.00, '2022-07-01', NULL, 'Active', 41, 41),
+(42, 'Checking', 'ACC1042', 33000.00, '2021-10-19', NULL, 'Active', 42, 42),
+(43, 'Savings', 'ACC1043', 24000.00, '2023-02-13', NULL, 'Active', 43, 43),
+(44, 'Checking', 'ACC1044', 60000.00, '2022-05-10', NULL, 'Active', 44, 44),
+(45, 'Savings', 'ACC1045', 18000.00, '2021-06-30', NULL, 'Active', 45, 45),
+(46, 'Checking', 'ACC1046', 7000.00, '2023-01-25', NULL, 'Active', 46, 46),
+(47, 'Savings', 'ACC1047', 13000.00, '2022-09-13', NULL, 'Active', 47, 47),
+(48, 'Checking', 'ACC1048', 21000.00, '2022-10-03', NULL, 'Active', 48, 48),
+(49, 'Savings', 'ACC1049', 11000.00, '2023-02-05', NULL, 'Active', 49, 49),
+(50, 'Checking', 'ACC1050', 25000.00, '2023-03-12', NULL, 'Active', 50, 50);
+-- 2.2 INSERT NEW ACCOUNT
+INSERT INTO Account (AccountID, AccountType, AccountNumber, CurrentBalance, DateOpened, DateClosed, AccountStatus, CustomerID, BranchID)
+VALUES 
+(51, 'Checking', 'ACC51', 0.00, '2021-02-15', '2023-11-15', 'Inactive', 51, 2),
+(52, 'Savings', 'ACC52', 5000.00, '2020-11-05', '2023-10-20', 'Inactive', 52, 1),
+(53, 'Checking', 'ACC53', 0.00, '2021-03-20', '2023-12-05', 'Inactive', 53, 2);
+
+-- TRANSACTION
+INSERT INTO Transaction (TransactionID, TransactionType, Amount, TransactionDate, AccountID) VALUES
+(1, 'Deposit', 5000.00, '2023-01-10 10:30:00', 1),
+(2, 'Withdrawal', 2000.00, '2023-02-15 14:45:00', 2),
+(3, 'Deposit', 1000.00, '2023-03-20 09:15:00', 3),
+(4, 'Transfer', 3000.00, '2023-04-05 16:00:00', 4),
+(5, 'Deposit', 2500.00, '2023-05-12 11:20:00', 5),
+(6, 'Deposit', 10000.00, '2023-02-25 15:30:00', 6),
+(7, 'Withdrawal', 5000.00, '2023-03-15 13:45:00', 7),
+(8, 'Transfer', 10000.00, '2023-04-18 16:15:00', 8),
+(9, 'Deposit', 7000.00, '2023-05-05 10:30:00', 9),
+(10, 'Withdrawal', 8000.00, '2023-06-10 14:00:00', 10),
+(11, 'Deposit', 15000.00, '2023-01-15 09:30:00', 11),
+(12, 'Withdrawal', 12000.00, '2023-02-10 16:00:00', 12),
+(13, 'Transfer', 5000.00, '2023-03-20 11:20:00', 13),
+(14, 'Deposit', 7000.00, '2023-04-05 14:15:00', 14),
+(15, 'Withdrawal', 3000.00, '2023-05-18 13:00:00', 15),
+(16, 'Deposit', 12000.00, '2023-06-08 10:45:00', 16),
+(17, 'Withdrawal', 8000.00, '2023-07-20 11:30:00', 17),
+(18, 'Transfer', 25000.00, '2023-08-10 14:00:00', 18),
+(19, 'Deposit', 5000.00, '2023-09-11 10:30:00', 19),
+(20, 'Withdrawal', 15000.00, '2023-10-01 12:00:00', 20),
+(21, 'Deposit', 2500.00, '2023-11-05 09:00:00', 21),
+(22, 'Withdrawal', 3500.00, '2023-12-10 11:15:00', 22),
+(23, 'Transfer', 1500.00, '2023-01-05 14:20:00', 23),
+(24, 'Deposit', 12000.00, '2023-02-15 09:30:00', 24),
+(25, 'Withdrawal', 2500.00, '2023-03-05 10:00:00', 25),
+(26, 'Deposit', 15000.00, '2023-04-15 14:30:00', 26),
+(27, 'Transfer', 10000.00, '2023-05-20 12:30:00', 27),
+(28, 'Deposit', 5000.00, '2023-06-01 16:00:00', 28),
+(29, 'Withdrawal', 2000.00, '2023-07-10 11:10:00', 29),
+(30, 'Transfer', 12000.00, '2023-08-20 15:15:00', 30),
+(31, 'Deposit', 8000.00, '2023-09-25 10:30:00', 31),
+(32, 'Withdrawal', 4000.00, '2023-10-30 14:00:00', 32),
+(33, 'Deposit', 9000.00, '2023-11-25 12:00:00', 33),
+(34, 'Transfer', 5000.00, '2023-01-15 16:00:00', 34),
+(35, 'Deposit', 14000.00, '2023-02-20 13:00:00', 35),
+(36, 'Withdrawal', 5000.00, '2023-03-15 15:30:00', 36),
+(37, 'Deposit', 10000.00, '2023-04-05 10:15:00', 37),
+(38, 'Withdrawal', 6000.00, '2023-05-02 12:45:00', 38),
+(39, 'Transfer', 5000.00, '2023-06-19 11:15:00', 39),
+(40, 'Deposit', 20000.00, '2023-07-23 10:00:00', 40),
+(41, 'Withdrawal', 3000.00, '2023-08-25 14:30:00', 41),
+(42, 'Deposit', 15000.00, '2023-09-28 11:45:00', 42),
+(43, 'Withdrawal', 7000.00, '2023-10-09 16:00:00', 43),
+(44, 'Transfer', 10000.00, '2023-11-18 15:00:00', 44),
+(45, 'Deposit', 2000.00, '2023-12-02 09:00:00', 45),
+(46, 'Withdrawal', 500.00, '2023-01-10 14:00:00', 46),
+(47, 'Transfer', 3000.00, '2023-02-15 13:30:00', 47),
+(48, 'Deposit', 18000.00, '2023-03-01 10:30:00', 48),
+(49, 'Withdrawal', 6000.00, '2023-04-14 15:30:00', 49),
+(50, 'Transfer', 2000.00, '2023-05-06 16:00:00', 50);
+
+-- LOAN
+INSERT INTO Loan (LoanID, LoanType, LoanAmount, InterestRate, Term, StartDate, EndDate, Status, CustomerID, BranchID) VALUES
+(1, 'Personal', 100000.00, 5.5, 24, '2022-01-01', '2024-01-01', 'Active', 1, 1),
+(2, 'Mortgage', 2500000.00, 6.0, 240, '2021-06-15', '2041-06-15', 'Active', 2, 2),
+(3, 'Car', 500000.00, 4.8, 60, '2020-09-10', '2025-09-10', 'Active', 3, 3),
+(4, 'Business', 2000000.00, 7.2, 120, '2022-03-20', '2032-03-20', 'Active', 4, 4),
+(5, 'Personal', 150000.00, 5.0, 36, '2023-02-01', '2026-02-01', 'Active', 5, 5),
+(6, 'Personal', 90000.00, 5.8, 24, '2023-01-10', '2025-01-10', 'Active', 6, 6),
+(7, 'Mortgage', 3000000.00, 5.5, 240, '2021-11-15', '2041-11-15', 'Active', 7, 7),
+(8, 'Car', 700000.00, 6.2, 60, '2020-06-01', '2025-06-01', 'Active', 8, 8),
+(9, 'Business', 2500000.00, 7.1, 120, '2021-05-25', '2031-05-25', 'Active', 9, 9),
+(10, 'Personal', 120000.00, 5.5, 36, '2023-07-19', '2026-07-19', 'Active', 10, 10),
+(11, 'Personal', 135000.00, 5.6, 36, '2022-05-15', '2025-05-15', 'Active', 11, 11),
+(12, 'Mortgage', 2100000.00, 5.2, 240, '2021-12-20', '2041-12-20', 'Active', 12, 12),
+(13, 'Car', 350000.00, 6.0, 60, '2021-08-03', '2026-08-03', 'Active', 13, 13),
+(14, 'Business', 1800000.00, 6.8, 120, '2020-07-12', '2030-07-12', 'Active', 14, 14),
+(15, 'Personal', 95000.00, 5.4, 36, '2022-06-09', '2025-06-09', 'Active', 15, 15),
+(16, 'Mortgage', 2800000.00, 5.9, 240, '2022-03-25', '2042-03-25', 'Active', 16, 16),
+(17, 'Car', 600000.00, 6.5, 60, '2021-11-15', '2026-11-15', 'Active', 17, 17),
+(18, 'Business', 1500000.00, 7.2, 120, '2022-05-18', '2032-05-18', 'Active', 18, 18),
+(19, 'Personal', 110000.00, 5.1, 36, '2022-09-11', '2025-09-11', 'Active', 19, 19),
+(20, 'Mortgage', 2500000.00, 5.3, 240, '2021-06-10', '2041-06-10', 'Active', 20, 20),
+(21, 'Car', 550000.00, 6.3, 60, '2020-02-25', '2025-02-25', 'Active', 21, 21),
+(22, 'Business', 1300000.00, 7.0, 120, '2021-03-16', '2031-03-16', 'Active', 22, 22),
+(23, 'Personal', 125000.00, 5.8, 36, '2022-11-01', '2025-11-01', 'Active', 23, 23),
+(24, 'Mortgage', 2300000.00, 5.4, 240, '2020-04-19', '2040-04-19', 'Active', 24, 24),
+(25, 'Car', 450000.00, 6.4, 60, '2022-02-07', '2027-02-07', 'Active', 25, 25),
+(26, 'Business', 1700000.00, 6.7, 120, '2022-04-23', '2032-04-23', 'Active', 26, 26),
+(27, 'Personal', 105000.00, 5.9, 36, '2021-07-28', '2024-07-28', 'Active', 27, 27),
+(28, 'Mortgage', 2750000.00, 5.8, 240, '2021-08-11', '2041-08-11', 'Active', 28, 28),
+(29, 'Car', 400000.00, 6.1, 60, '2022-03-12', '2027-03-12', 'Active', 29, 29),
+(30, 'Business', 1400000.00, 7.3, 120, '2022-01-08', '2032-01-08', 'Active', 30, 30),
+(31, 'Personal', 85000.00, 5.5, 36, '2022-05-24', '2025-05-24', 'Active', 31, 31),
+(32, 'Mortgage', 2650000.00, 5.7, 240, '2021-01-30', '2041-01-30', 'Active', 32, 32),
+(33, 'Car', 650000.00, 6.6, 60, '2021-12-14', '2026-12-14', 'Active', 33, 33),
+(34, 'Business', 1600000.00, 6.9, 120, '2022-08-02', '2032-08-02', 'Active', 34, 34),
+(35, 'Personal', 140000.00, 5.3, 36, '2022-07-30', '2025-07-30', 'Active', 35, 35),
+(36, 'Mortgage', 2900000.00, 5.6, 240, '2022-09-18', '2042-09-18', 'Active', 36, 36),
+(37, 'Car', 500000.00, 6.2, 60, '2021-05-06', '2026-05-06', 'Active', 37, 37),
+(38, 'Business', 1800000.00, 7.0, 120, '2022-06-17', '2032-06-17', 'Active', 38, 38),
+(39, 'Personal', 115000.00, 5.7, 36, '2021-09-05', '2024-09-05', 'Active', 39, 39),
+(40, 'Mortgage', 2200000.00, 5.5, 240, '2021-11-28', '2041-11-28', 'Active', 40, 40),
+(41, 'Car', 700000.00, 6.0, 60, '2021-06-22', '2026-06-22', 'Active', 41, 41),
+(42, 'Business', 1500000.00, 6.8, 120, '2022-10-15', '2032-10-15', 'Active', 42, 42),
+(43, 'Personal', 120000.00, 5.4, 36, '2021-02-13', '2024-02-13', 'Active', 43, 43),
+(44, 'Mortgage', 2400000.00, 5.1, 240, '2022-07-20', '2042-07-20', 'Active', 44, 44),
+(45, 'Car', 550000.00, 6.3, 60, '2022-05-14', '2027-05-14', 'Active', 45, 45),
+(46, 'Business', 1700000.00, 6.5, 120, '2022-02-10', '2032-02-10', 'Active', 46, 46),
+(47, 'Personal', 105000.00, 5.9, 36, '2022-12-22', '2025-12-22', 'Active', 47, 47),
+(48, 'Mortgage', 2600000.00, 5.6, 240, '2021-09-01', '2041-09-01', 'Active', 48, 48),
+(49, 'Car', 400000.00, 5.8, 60, '2022-03-28', '2027-03-28', 'Active', 49, 49),
+(50, 'Business', 1450000.00, 6.2, 120, '2022-07-01', '2032-07-01', 'Active', 50, 50);
+
+-- LOAN PAYMENT
+INSERT INTO LoanPayment (LoanPaymentID, ScheduledPaymentDate, PaymentAmount, PrincipalAmount, InterestAmount, PaidAmount, PaidDate, LoanID) VALUES
+(1, '2023-03-01', 5000.00, 4000.00, 1000.00, 5000.00, '2023-03-01', 1),
+(2, '2023-04-01', 5000.00, 4100.00, 900.00, 5000.00, '2023-04-01', 1),
+(3, '2023-05-01', 5000.00, 4200.00, 800.00, 5000.00, '2023-05-01', 1),
+(4, '2023-06-01', 5000.00, 4300.00, 700.00, 5000.00, '2023-06-01', 1),
+(5, '2023-07-01', 5000.00, 4400.00, 600.00, 5000.00, '2023-07-01', 1),
+(6, '2023-02-15', 6000.00, 4500.00, 1500.00, 6000.00, '2023-02-15', 6),
+(7, '2023-03-01', 6000.00, 4600.00, 1400.00, 6000.00, '2023-03-01', 7),
+(8, '2023-04-01', 6000.00, 4700.00, 1300.00, 6000.00, '2023-04-01', 8),
+(9, '2023-05-01', 6000.00, 4800.00, 1200.00, 6000.00, '2023-05-01', 9),
+(10, '2023-06-01', 6000.00, 4900.00, 1100.00, 6000.00, '2023-06-01', 10),
+(11, '2023-07-01', 6000.00, 5000.00, 1000.00, 6000.00, '2023-07-01', 11),
+(12, '2023-08-01', 6000.00, 5100.00, 900.00, 6000.00, '2023-08-01', 12),
+(13, '2023-09-01', 6000.00, 5200.00, 800.00, 6000.00, '2023-09-01', 13),
+(14, '2023-10-01', 6000.00, 5300.00, 700.00, 6000.00, '2023-10-01', 14),
+(15, '2023-11-01', 6000.00, 5400.00, 600.00, 6000.00, '2023-11-01', 15),
+(16, '2023-12-01', 6000.00, 5500.00, 500.00, 6000.00, '2023-12-01', 16),
+(17, '2024-01-01', 6000.00, 5600.00, 400.00, 6000.00, '2024-01-01', 17),
+(18, '2024-02-01', 6000.00, 5700.00, 300.00, 6000.00, '2024-02-01', 18),
+(19, '2024-03-01', 6000.00, 5800.00, 200.00, 6000.00, '2024-03-01', 19),
+(20, '2024-04-01', 6000.00, 5900.00, 100.00, 6000.00, '2024-04-01', 20),
+(21, '2024-05-01', 6000.00, 6000.00, 0.00, 6000.00, '2024-05-01', 21),
+(22, '2024-06-01', 6000.00, 6100.00, -100.00, 6000.00, '2024-06-01', 22),
+(23, '2024-07-01', 6000.00, 6200.00, -200.00, 6000.00, '2024-07-01', 23),
+(24, '2024-08-01', 6000.00, 6300.00, -300.00, 6000.00, '2024-08-01', 24),
+(25, '2024-09-01', 6000.00, 6400.00, -400.00, 6000.00, '2024-09-01', 25),
+(26, '2024-10-01', 6000.00, 6500.00, -500.00, 6000.00, '2024-10-01', 26),
+(27, '2024-11-01', 6000.00, 6600.00, -600.00, 6000.00, '2024-11-01', 27),
+(28, '2024-12-01', 6000.00, 6700.00, -700.00, 6000.00, '2024-12-01', 28),
+(29, '2025-01-01', 6000.00, 6800.00, -800.00, 6000.00, '2025-01-01', 29),
+(30, '2025-02-01', 6000.00, 6900.00, -900.00, 6000.00, '2025-02-01', 30),
+(31, '2025-03-01', 6000.00, 7000.00, -1000.00, 6000.00, '2025-03-01', 31),
+(32, '2025-04-01', 6000.00, 7100.00, -1100.00, 6000.00, '2025-04-01', 32),
+(33, '2025-05-01', 6000.00, 7200.00, -1200.00, 6000.00, '2025-05-01', 33),
+(34, '2025-06-01', 6000.00, 7300.00, -1300.00, 6000.00, '2025-06-01', 34),
+(35, '2025-07-01', 6000.00, 7400.00, -1400.00, 6000.00, '2025-07-01', 35),
+(36, '2025-08-01', 6000.00, 7500.00, -1500.00, 6000.00, '2025-08-01', 36),
+(37, '2025-09-01', 6000.00, 7600.00, -1600.00, 6000.00, '2025-09-01', 37),
+(38, '2025-10-01', 6000.00, 7700.00, -1700.00, 6000.00, '2025-10-01', 38),
+(39, '2025-11-01', 6000.00, 7800.00, -1800.00, 6000.00, '2025-11-01', 39),
+(40, '2025-12-01', 6000.00, 7900.00, -1900.00, 6000.00, '2025-12-01', 40),
+(41, '2026-01-01', 6000.00, 8000.00, -2000.00, 6000.00, '2026-01-01', 41),
+(42, '2026-02-01', 6000.00, 8100.00, -2100.00, 6000.00, '2026-02-01', 42),
+(43, '2026-03-01', 6000.00, 8200.00, -2200.00, 6000.00, '2026-03-01', 43),
+(44, '2026-04-01', 6000.00, 8300.00, -2300.00, 6000.00, '2026-04-01', 44),
+(45, '2026-05-01', 6000.00, 8400.00, -2400.00, 6000.00, '2026-05-01', 45),
+(46, '2026-06-01', 6000.00, 8500.00, -2500.00, 6000.00, '2026-06-01', 46),
+(47, '2026-07-01', 6000.00, 8600.00, -2600.00, 6000.00, '2026-07-01', 47),
+(48, '2026-08-01', 6000.00, 8700.00, -2700.00, 6000.00, '2026-08-01', 48),
+(49, '2026-09-01', 6000.00, 8800.00, -2800.00, 6000.00, '2026-09-01', 49),
+(50, '2026-10-01', 6000.00, 8900.00, -2900.00, 6000.00, '2026-10-01', 50);
+
+-- 3. READING
+-- WHERE
+-- S1: Get all customers who have an Inactive account:  
+SELECT * 
+FROM Customer c
+JOIN Account a ON c.CustomerID = a.CustomerID
+WHERE a.AccountStatus = 'Inactive';
+-- S2: Find transactions with an amount greater than ₱50,000:
+SELECT * 
+FROM Transaction
+WHERE Amount > 10000;
+-- S1: Get all customer who have an active accounts
+SELECT * 
+FROM Customer c
+JOIN Account a ON c.CustomerID = a.CustomerID
+WHERE a.AccountStatus = 'Active';
+-- S4: Find Employee whose position is 'Manager':
+SELECT * 
+FROM Employee
+WHERE Position = 'Manager';
+-- S5: Get all loans with status 'Approved':
+SELECT * 
+FROM Loan
+WHERE LoanType = 'Personal';
+
+-- 2. IN Operator — Match Multiple Values
+-- s1: Find customers with an account type of either 'Savings' or 'Checking':
+SELECT * 
+FROM Account
+WHERE AccountType IN ('Savings');
+-- s2: Find transactions type 'Withdrawal'
+SELECT * 
+FROM Transaction
+WHERE TransactionType IN ('Withdrawal');
+-- s3: Find accounts that are 'Active' or 'Dormant':
+SELECT * 
+FROM Account
+WHERE AccountStatus IN ('Active');
+-- s4:Find Bank Name 'MetroBank':
+SELECT * 
+FROM Bank
+WHERE BankName IN ('MetroBank');
+-- s5: Retrieve loans with types 'Personal', 'Auto', or 'Home':
+SELECT * 
+FROM Loan
+WHERE LoanType IN ('Personal');
+
+-- 3. AND Operator — Combine Conditions
+-- s1: Get all customers with a balance greater than 10,000 and an active account:
+SELECT * 
+FROM Account
+WHERE CurrentBalance > 10000 
+  AND AccountStatus = 'Active';
+-- s2: Find transactions over ₱5,000 and made from 'Savings' accounts:
+SELECT * 
+FROM Transaction t
+JOIN Account a ON t.AccountID = a.AccountID
+WHERE t.Amount > 5000 AND a.AccountType = 'Savings';
+-- s3: Find all loans with a type of "Mortgage" and a loan amount greater than ₱200,000.
+SELECT * 
+FROM Loan
+WHERE LoanType = 'Mortgage' 
+  AND LoanAmount > 200000;
+-- s4: Find transactions with an amount greater than ₱10,000 from active accounts.
+SELECT * 
+FROM Transaction t
+JOIN Account a ON t.AccountID = a.AccountID
+WHERE t.Amount > 10000 
+AND a.AccountStatus = 'Active';
+-- s5:Get loans with status 'Approved' and amount greater than ₱100,000:
+SELECT * 
+FROM Loan
+WHERE Status = 'Active' AND LoanAmount > 100000;
+
+-- 4. NOT Operator — Exclude Records
+-- s1: get accounts that are not of type of checking
+SELECT * 
+FROM Account
+WHERE AccountType NOT IN ('Checking');
+-- s2; Get accounts that are not of type 'Savings':
+ SELECT * 
+FROM Account
+WHERE AccountType NOT IN ('Savings');
+-- s3: Find transactions not made in December:
+SELECT * 
+FROM Transaction
+WHERE MONTH(TransactionDate) <> 12;
+-- s4: Get all loans that are not of type 'Personal'
+SELECT * 
+FROM Loan
+WHERE LoanType NOT IN ('Personal');
+-- s5:Get accounts that are not 'InActive'
+SELECT * 
+FROM Account
+WHERE AccountStatus NOT IN ('Active');
+
+-- 5. COUNT Function — Aggregate Totals
+-- Count the number of active customers:
+SELECT COUNT(DISTINCT c.CustomerID) AS ActiveCustomers
+FROM Customer c
+JOIN Account a ON c.CustomerID = a.CustomerID
+WHERE a.AccountStatus = 'Active';
+-- Count the number of inactive customers:
+SELECT COUNT(DISTINCT c.CustomerID) AS InactiveCustomers
+FROM Customer c
+JOIN Account a ON c.CustomerID = a.CustomerID
+WHERE a.AccountStatus <> 'Active';
+-- Count the total transactions in January:
+SELECT COUNT(*) AS TotalTransactions
+FROM Transaction
+WHERE MONTH(TransactionDate) = 1;
+-- Count the number of loans above ₱50,000:
+SELECT COUNT(*) AS LoansAbove50K
+FROM Loan
+WHERE LoanAmount > 50000;
+-- Count the number of customers from 'CEBU' branch:
+SELECT COUNT(*) AS PersonalLoans
+FROM Loan
+WHERE LoanType = 'Personal';
+
+
+-- 6. DISTINCT Keyword — Eliminate Duplicates
+-- Get unique account types:
+ SELECT DISTINCT AccountType
+FROM Account;
+-- List all distinct branches:
+SELECT DISTINCT Bank
+FROM Branch;
+-- Find unique cities where customers live:
+SELECT DISTINCT CustomerType
+FROM Customer;
+-- Get distinct transaction types:
+SELECT DISTINCT TransactionType
+FROM Transaction;
+-- List distinct loan types:
+SELECT DISTINCT LoanType
+FROM Loan;
+
+SELECT DISTINCT AccountStatus
+FROM Account;
+
+-- Updating Records
+-- 4.1: Update a customer's phone number
+UPDATE Customer
+SET PhoneNumber = '09181234568'  -- New phone number
+WHERE CustomerID = 1;  -- Specify the CustomerID of the customer whose phone number you want to update
+
+-- 4.2: Change the account status to 'Active' or 'Inactive'
+UPDATE Account
+SET AccountStatus = 'Inactive'
+WHERE AccountID = 2;  -- Specify the AccountID of the account you want to update
+
+-- 4.3: Add interest to all savings accounts (3% of the current balance)
+UPDATE Account
+SET CurrentBalance = CurrentBalance + (CurrentBalance * 0.03)
+WHERE AccountType = 'Savings';
+SELECT * 
+FROM Account
+WHERE AccountType = 'Savings';
+
+SET SQL_SAFE_UPDATES = 0;
+
+-- 4.4: Change the account type for a specific account
+UPDATE Account
+SET AccountType = 'Checking'
+WHERE AccountID = 1;  -- Specify the AccountID of the account you want to update
+
+-- 5. deleting records
+-- 5.1. Write an SQL query to delete a specific customer record based on CustomerID.
+DELETE FROM Customer
+WHERE CustomerID = 53;  -- Replace 1 with the actual CustomerID you want to delete
+ALTER TABLE account
+DROP FOREIGN KEY account_ibfk_1,
+ADD CONSTRAINT account_ibfk_1
+FOREIGN KEY (CustomerID) REFERENCES customer(CustomerID)
+ON DELETE CASCADE;
+
+-- 5.2. Write an SQL query to delete all accounts with a balance of zero.
+DELETE FROM Account
+WHERE CurrentBalance = 0;
+SELECT * 
+FROM Account
+WHERE CurrentBalance = 0;
+
+-- ADVANCE SCENARIOS
+-- 6.1. Write an SQL query to find customers who do not have an account yet.
+SELECT c.CustomerID, c.FirstName, c.LastName
+FROM Customer c
+LEFT JOIN Account a ON c.CustomerID = a.CustomerID
+WHERE a.AccountID IS NULL;
+
+-- 6.2. Write an SQL query to delete a customer and all associated accounts in one operation.
+DELETE FROM account WHERE CustomerID = 52;
+DELETE FROM customer WHERE CustomerID = 52;
+
+-- VERIFYING IF NO RETURNING VALUES MEANS WE SUCCESSFULLY DELETED ID NUMBER 52
+-- 1. Verify that the customer has been deleted
+SELECT * 
+FROM Customer
+WHERE CustomerID = 52;  -- Replace with the actual CustomerID
+-- 2. Verify that all associated accounts have been deleted
+SELECT * 
+FROM Account
+WHERE CustomerID = 52;  -- Replace with the actual CustomerID
+-- 3. Verify that all transactions associated with the customer have been deleted
+SELECT * 
+FROM Transaction
+WHERE AccountID IN (SELECT AccountID FROM Account WHERE CustomerID = 52);  -- Replace with the actual CustomerID
+-- 4. Verify that all loans associated with the customer have been deleted
+SELECT * 
+FROM Loan
+WHERE CustomerID = 52;  -- Replace with the actual CustomerID
 
